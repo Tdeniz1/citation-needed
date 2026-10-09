@@ -1,0 +1,21 @@
+# secrets
+.env
+.env.*
+*.key
+*_api_key
+# caches and build output
+.cache/
+.citation-needed-cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+.DS_Store
+
+# private notes (career context, never public)
+HANDOFF.md
+RESULTS-FOR-RESUME.md
