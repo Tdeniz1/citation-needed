@@ -16,19 +16,35 @@ from __future__ import annotations
 from citation_needed import config
 from citation_needed.citations import clients
 from citation_needed.citations.parse import ParsedCitation
-from citation_needed.citations.textutil import author_overlap, title_similarity
+from citation_needed.citations.textutil import (
+    author_overlap,
+    surname,
+    title_similarity,
+    title_similarity_full,
+)
 from citation_needed.config import MIN_AUTHOR_OVERLAP, TITLE_SIM_STRONG, TITLE_SIM_THRESHOLD
 
 
-def _match_candidate(parsed: ParsedCitation, cand: dict) -> tuple[bool, float, int]:
-    """Return (is_match, title_sim, author_overlap) for one candidate record."""
+def _match_candidate(parsed: ParsedCitation, cand: dict) -> tuple[bool, float, int, float]:
+    """Return (is_match, title_sim, author_overlap, full_title_sim) for one candidate.
+
+    Changed from the study: token_set_ratio scores 100 whenever one title's words are a
+    subset of the other's, so a short real title used to match any longer paper that
+    contained it, with no author check (live false positives: "Attention is all you
+    need" matched a correction notice; "Liraglutide and cardiovascular outcomes in type
+    2 diabetes" matched a different liraglutide paper). When the whole titles are not
+    close, the match now needs a shared author whenever the citation names authors.
+    """
     sim = title_similarity(parsed.title, cand.get("title"))
+    full = title_similarity_full(parsed.title, cand.get("title"))
     ov = author_overlap(parsed.authors, cand.get("authors") or [])
+    if full < TITLE_SIM_THRESHOLD and parsed.authors and ov < MIN_AUTHOR_OVERLAP:
+        return False, sim, ov, full   # subset-only title match, and no shared author
     if sim >= TITLE_SIM_STRONG:
-        return True, sim, ov          # near-identical title alone is enough
+        return True, sim, ov, full    # near-identical title alone is enough
     if sim >= TITLE_SIM_THRESHOLD and (ov >= MIN_AUTHOR_OVERLAP or not parsed.authors):
-        return True, sim, ov
-    return False, sim, ov
+        return True, sim, ov, full
+    return False, sim, ov, full
 
 
 def check_existence(parsed: ParsedCitation) -> dict:
@@ -81,7 +97,8 @@ def check_existence(parsed: ParsedCitation) -> dict:
     if parsed.title:
         all_searchers = {
             "crossref": lambda t: clients.crossref_search(t, parsed.author_strings[0] if parsed.author_strings else None),
-            "pubmed": clients.pubmed_search_title,
+            "pubmed": lambda t: clients.pubmed_search_title(
+                t, surname(parsed.author_strings[0]) if parsed.author_strings else None),
             "openalex": clients.openalex_search,
             "s2": clients.s2_search,
         }
@@ -91,20 +108,28 @@ def check_existence(parsed: ParsedCitation) -> dict:
                 cands = fn(parsed.title)
             except Exception:  # a single index failing must not fail the check
                 cands = []
+            # Changed from the study: take the best matching candidate per source, not the
+            # first one (closest whole title, then most shared authors, then closest year), so a
+            # looser match ranked higher by the index cannot win.
+            best = None
             for cand in cands:
-                is_match, sim, ov = _match_candidate(parsed, cand)
+                is_match, sim, ov, full = _match_candidate(parsed, cand)
                 result["best_title_sim"] = max(result["best_title_sim"], sim)
-                if is_match:
-                    result["title_matched"] = True
-                    if src not in canonical_by_source:
-                        canonical_by_source[src] = cand
-                    if src not in result["matched_sources"]:
-                        result["matched_sources"].append(src)
-                    result["candidates"].append(
-                        {"source": src, "title": cand.get("title"), "sim": sim,
-                         "author_overlap": ov, "doi": cand.get("doi"), "pmid": cand.get("pmid")}
-                    )
-                    break  # best candidate per source is enough
+                year_gap = abs((cand.get("year") or 0) - parsed.year) if parsed.year and cand.get("year") else 99
+                key = (full, ov, -year_gap)
+                if is_match and (best is None or key > best[0]):
+                    best = (key, cand, sim, ov)
+            if best:
+                _, cand, sim, ov = best
+                result["title_matched"] = True
+                if src not in canonical_by_source:
+                    canonical_by_source[src] = cand
+                if src not in result["matched_sources"]:
+                    result["matched_sources"].append(src)
+                result["candidates"].append(
+                    {"source": src, "title": cand.get("title"), "sim": sim,
+                     "author_overlap": ov, "doi": cand.get("doi"), "pmid": cand.get("pmid")}
+                )
 
     result["resolved"] = bool(canonical_by_source)
     if result["resolved"]:

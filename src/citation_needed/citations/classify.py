@@ -87,8 +87,11 @@ def classify_citation(citation, claim: str | None = None, use_judge: bool = Fals
                            f"{len(failures)} lookup(s) failed, so absence is not evidence. "
                            "Rerun when the indices are reachable.")
         searched = ", ".join(rec["sources_searched"])
-        return _finish(rec, "fabricated",
-                       f"No record matches this citation's identifiers or title in: {searched}.")
+        why = f"No record matches this citation's identifiers or title in: {searched}."
+        if not (parsed.doi or parsed.pmid):
+            why += (" Title-only lookup: work these indices do not hold (many conference papers, "
+                    "preprints, books) also lands here, so check by hand before removing it.")
+        return _finish(rec, "fabricated", why)
 
     canonical = exist["canonical"]
     rec["canonical"] = {k: canonical.get(k) for k in
