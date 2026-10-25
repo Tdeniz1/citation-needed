@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use citation-needed, please cite the study its checking method comes from (preferred-citation)."
-title: "citation-needed: checks whether an LLM's citations are real, unretracted, and the paper they claim to be"
+title: "citation-needed: checks whether an LLM's citations are real, unretracted, and the paper they claim to be, and whether its numbers appear in the sources"
 type: software
 authors:
   - family-names: Turk
@@ -8,6 +8,7 @@ authors:
     orcid: "https://orcid.org/0009-0000-3474-3150"
     affiliation: University of South Carolina
 license: MIT
+version: 0.1.0a1
 repository-code: "https://github.com/Tdeniz1/citation-needed"
 keywords:
   - large language models
@@ -17,7 +18,7 @@ keywords:
   - retracted publications
   - model context protocol
 preferred-citation:
-  type: dataset
+  type: data
   title: >-
     Cheap, private, but trustworthy? Verification harness, medical claim corpus,
     and full results for citation integrity in open-weight, self-hostable language
@@ -29,4 +30,4 @@ preferred-citation:
       affiliation: University of South Carolina
   doi: 10.5281/zenodo.22030231
   year: 2026
-  repository-code: "https://github.com/Tdeniz1/citation-integrity-openweight-llms"
+  repository-code: "https://github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit"
