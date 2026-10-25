@@ -51,6 +51,16 @@ def title_similarity(a: str | None, b: str | None) -> float:
     return float(fuzz.token_set_ratio(na, nb))
 
 
+def title_similarity_full(a: str | None, b: str | None) -> float:
+    """0-100 whole-title similarity. Unlike token_set_ratio, a short title that is a
+    subset of a longer one ("Attention is all you need" inside "Correction to: Attention
+    is all you need: utilizing attention in ...") does not score 100."""
+    na, nb = norm_title(a), norm_title(b)
+    if not na or not nb:
+        return 0.0
+    return float(fuzz.token_sort_ratio(na, nb))
+
+
 def clean_doi(doi: str | None) -> str | None:
     if not doi:
         return None

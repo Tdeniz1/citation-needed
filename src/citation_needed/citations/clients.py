@@ -124,14 +124,15 @@ def _pubmed_parse_article(art: ET.Element) -> dict:
     pub_types = [pt.text for pt in art.findall(".//PublicationTypeList/PublicationType") if pt.text]
     # retraction cross-references (RefType attr on CommentsCorrections)
     ref_types = [cc.get("RefType") for cc in art.findall(".//CommentsCorrections")]
-    doi = None
-    for aid in art.findall(".//ArticleId"):
-        if aid.get("IdType") == "doi" and aid.text:
-            doi = clean_doi(aid.text)
-    pmcid = None
-    for aid in art.findall(".//ArticleId"):
-        if aid.get("IdType") == "pmc" and aid.text:
-            pmcid = aid.text
+    # Changed from the study: `.//ArticleId` also walks PubmedData/ReferenceList, and the
+    # last DOI found won, so a record could carry the DOI of a paper it cites. Only the
+    # article's own ArticleIdList (then its ELocationID) identifies the article.
+    own_ids = art.findall("./PubmedData/ArticleIdList/ArticleId")
+    doi = next((clean_doi(a.text) for a in own_ids if a.get("IdType") == "doi" and a.text), None)
+    if not doi:
+        eloc = art.find("./MedlineCitation/Article/ELocationID[@EIdType='doi']")
+        doi = clean_doi(eloc.text) if eloc is not None and eloc.text else None
+    pmcid = next((a.text for a in own_ids if a.get("IdType") == "pmc" and a.text), None)
     abstract_parts = [ab.text or "" for ab in art.findall(".//Abstract/AbstractText")]
     abstract = " ".join(p for p in abstract_parts if p).strip() or None
     return {
@@ -181,13 +182,25 @@ def pubmed_esearch(term: str, retmax: int = SEARCH_ROWS) -> list[str]:
     return (e["body"].get("esearchresult") or {}).get("idlist") or []
 
 
-def pubmed_search_title(title: str) -> list[dict]:
-    pmids = pubmed_esearch(f"{title}[Title]")
+def pubmed_search_title(title: str, author: str | None = None) -> list[dict]:
+    """Title search, optionally scoped by the first author's surname.
+
+    Changed from the study: a bare [Title] search is a bag of words sorted by date, so a
+    common title ("Liraglutide and cardiovascular outcomes in type 2 diabetes") can lose
+    the paper itself behind newer papers using the same words. When an author is known,
+    the author-scoped results come first, then the plain title results.
+    """
+    pmids: list[str] = []
+    if author:
+        pmids = pubmed_esearch(f"{title}[Title] AND {author}[Author]")
+    for pmid in pubmed_esearch(f"{title}[Title]"):
+        if pmid not in pmids:
+            pmids.append(pmid)
     if not pmids:
         # fall back to a looser all-fields search
         pmids = pubmed_esearch(title)
     out = []
-    for pmid in pmids[:SEARCH_ROWS]:
+    for pmid in pmids[:SEARCH_ROWS * 2 if author else SEARCH_ROWS]:
         rec = pubmed_efetch(pmid)
         if rec:
             out.append(rec)
