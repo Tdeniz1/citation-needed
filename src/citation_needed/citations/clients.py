@@ -1,4 +1,4 @@
-# Ported from citation-integrity-openweight-llms (MIT, Deniz Turk 2026),
+# Ported from github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit (MIT, Deniz Turk 2026),
 # code/harness/clients.py. Logic unchanged unless a comment says otherwise.
 """Cached clients for every index the harness queries, each normalized to a common
 canonical-record schema so downstream modules never touch a raw API payload.

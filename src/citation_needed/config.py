@@ -1,7 +1,7 @@
 """Every knob in one place. Nothing here makes a network call.
 
 Thresholds are the ones the original study used and validated
-(citation-integrity-openweight-llms, code/config.py). Change them and you are no
+(github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit, code/config.py). Change them and you are no
 longer running the method the paper reports.
 """
 from __future__ import annotations

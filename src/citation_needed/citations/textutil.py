@@ -1,4 +1,4 @@
-# Ported from citation-integrity-openweight-llms (MIT, Deniz Turk 2026),
+# Ported from github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit (MIT, Deniz Turk 2026),
 # code/harness/textutil.py. Logic unchanged unless a comment says otherwise.
 """Text normalization + fuzzy-matching helpers shared across harness modules."""
 from __future__ import annotations

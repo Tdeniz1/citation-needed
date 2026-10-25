@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "citation-needed"
-version = "0.1.0.dev0"
+version = "0.1.0a1"
 description = "Check whether an LLM's citations are real, unretracted, and the paper they claim to be, and whether its numbers appear in the sources."
 readme = "README.md"
 license = "MIT"

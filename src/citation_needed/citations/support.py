@@ -1,4 +1,4 @@
-# Ported from citation-integrity-openweight-llms (MIT, Deniz Turk 2026),
+# Ported from github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit (MIT, Deniz Turk 2026),
 # code/harness/support.py. Ollama judge dropped; otherwise unchanged.
 """Step 5: support check. EXPERIMENTAL.
 
