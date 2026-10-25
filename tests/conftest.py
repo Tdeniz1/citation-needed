@@ -3,7 +3,8 @@
 A cache miss becomes `could_not_check`, never a network call, so CI is deterministic
 and never depends on Crossref or PubMed being up. To re-record after changing what
 the checker asks for: delete tests/fixtures/cache and run
-`CITATION_NEEDED_CACHE=tests/fixtures/cache citation-needed examples/answer.md`.
+`CITATION_NEEDED_CACHE=tests/fixtures/cache citation-needed examples/answer.md` (and the
+files in examples/live/), then `python tests/fixtures/scrub.py` to redact author emails.
 """
 from __future__ import annotations
 
