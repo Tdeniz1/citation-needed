@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "citation-needed"
 version = "0.1.0.dev0"
-description = "Check whether an LLM's citations are real, unretracted, and actually the paper they claim to be."
+description = "Check whether an LLM's citations are real, unretracted, and the paper they claim to be, and whether its numbers appear in the sources."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -29,13 +29,21 @@ classifiers = [
 # The support judge is EXPERIMENTAL: it failed its human-agreement gate in the
 # original study (Cohen's kappa 0.525). See README "What is not validated".
 judge = ["anthropic>=0.40"]
-dev = ["pytest>=8.0", "ruff>=0.6"]
+# MCP server (`citation-needed-mcp`); works with SDK 1.x and 2.x.
+mcp = ["mcp>=1.2"]
+# Read PDF source documents in the numbers check.
+pdf = ["pypdf>=4.0"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mcp>=1.2"]
 
 [project.scripts]
 citation-needed = "citation_needed.cli:main"
+citation-needed-mcp = "citation_needed.mcp_server:main"
 
 [project.urls]
+Homepage = "https://github.com/Tdeniz1/citation-needed"
+Issues = "https://github.com/Tdeniz1/citation-needed/issues"
 "Original study" = "https://doi.org/10.5281/zenodo.22030231"
+"Study code" = "https://github.com/Tdeniz1/Open-Weight-LLM-Medical-Citation-Audit"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/citation_needed"]

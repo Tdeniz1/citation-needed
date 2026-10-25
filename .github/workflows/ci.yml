@@ -34,3 +34,5 @@ jobs:
         run: |
           citation-needed examples/answer.md --offline --format json > /dev/null
           ! citation-needed examples/answer.md --offline --fail-on fabricated > /dev/null
+          ! citation-needed examples/numbers-answer.md --sources examples/sources --only numbers --fail-on not_found > /dev/null
+          citation-needed-mcp --version
